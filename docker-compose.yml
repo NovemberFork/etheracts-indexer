@@ -2,4 +2,7 @@ services:
   indexer:
     build: .
     env_file: .env
+    # Docker Desktop often can't reach IPv6; Supabase direct host returns AAAA first.
+    environment:
+      NODE_OPTIONS: --dns-result-order=ipv4first
     restart: unless-stopped
