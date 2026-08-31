@@ -1,0 +1,27 @@
+{
+  "name": "etheracts-indexer",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@10.33.2",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "dev": "tsx watch src/main.ts",
+    "start": "tsx src/main.ts",
+    "peek": "tsx src/peek.ts",
+    "seed": "tsx seed/generate.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "pg": "^8.16.3",
+    "starknet": "^8.9.2",
+    "tsx": "^4.20.4"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.0",
+    "@types/pg": "^8.15.4",
+    "typescript": "^5.9.2"
+  }
+}
