@@ -10,6 +10,8 @@ import {
   writeChunk,
   getRecentBlocks,
   rollbackTo,
+  seedControlSecret,
+  heartbeat,
   type Checkpoint,
   type StoredEvent,
 } from "./db.js";
@@ -77,6 +79,12 @@ export async function runIndexer(config: Config): Promise<void> {
   const provider = makeProvider(config.rpcUrl);
   const pool = makeDb(config.databaseUrl);
   await migrate(pool);
+  await seedControlSecret(pool, config.controlSecret);
+  if (!config.controlSecret) {
+    console.warn(
+      "CONTROL_SECRET unset — /etheracts/admin can see status, not pause/resume",
+    );
+  }
 
   let checkpoint = await getCheckpoint(pool, config.contractAddress);
   if (!checkpoint) {
@@ -87,14 +95,44 @@ export async function runIndexer(config: Config): Promise<void> {
     console.log(`genesis: starting at block ${config.startBlock}`);
   }
 
+  let lastError: string | null = null;
+  let operating: "running" | "paused" = "running";
+  let stopping = false;
+
+  const stop = async (reason: string) => {
+    if (stopping) return;
+    stopping = true;
+    console.log(`${reason}: stopping`);
+    try {
+      await heartbeat(pool, "stopped", lastError);
+    } catch (err) {
+      console.error("heartbeat on stop:", err);
+    }
+    process.exit(0);
+  };
+  process.on("SIGINT", () => void stop("SIGINT"));
+  process.on("SIGTERM", () => void stop("SIGTERM"));
+
   while (true) {
     try {
-      const latest = await provider.getBlockNumber();
-      const target = latest - config.confirmations;
-      if (checkpoint.blockNumber < target) {
-        checkpoint = await syncTo(provider, pool, config, checkpoint, target);
+      const ctrl = await heartbeat(pool, operating, lastError);
+
+      if (ctrl.desired === "paused") {
+        if (operating !== "paused") console.log("paused from admin");
+        operating = "paused";
+        lastError = null;
+      } else {
+        if (operating === "paused") console.log("resumed from admin");
+        operating = "running";
+        const latest = await provider.getBlockNumber();
+        const target = latest - config.confirmations;
+        if (checkpoint.blockNumber < target) {
+          checkpoint = await syncTo(provider, pool, config, checkpoint, target);
+        }
+        lastError = null;
       }
     } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err);
       console.error("poll error:", err);
     }
     await sleep(config.pollMs);

@@ -15,6 +15,8 @@ export interface Config extends ChainConfig {
   confirmations: number;
   pollMs: number;
   chunkBlocks: number;
+  /** Same value as the site ADMIN_PASSWORD — phone control via /etheracts/admin. */
+  controlSecret: string;
 }
 
 export function loadChainConfig(): ChainConfig {
@@ -32,5 +34,6 @@ export function loadConfig(): Config {
     confirmations: Number(process.env.CONFIRMATIONS ?? "2"),
     pollMs: Number(process.env.POLL_MS ?? "5000"),
     chunkBlocks: Number(process.env.CHUNK_BLOCKS ?? "1000"),
+    controlSecret: process.env.CONTROL_SECRET ?? "",
   };
 }

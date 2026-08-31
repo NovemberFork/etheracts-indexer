@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { Pool } from "pg";
@@ -11,7 +12,8 @@ export interface Checkpoint {
   blockHash: string;
 }
 
-export const makeDb = (url: string) => new Pool({ connectionString: url });
+export const makeDb = (url: string) =>
+  new Pool({ connectionString: url, max: 1 });
 
 export async function migrate(pool: Pool): Promise<void> {
   await pool.query(
@@ -146,4 +148,41 @@ export async function rollbackTo(
   } finally {
     client.release();
   }
+}
+
+export interface IndexerControl {
+  desired: "running" | "paused";
+}
+
+export async function seedControlSecret(
+  pool: Pool,
+  secret: string,
+): Promise<void> {
+  if (!secret) return;
+  const hash = createHash("sha256").update(secret, "utf8").digest("hex");
+  await pool.query(
+    "insert into indexer_auth (id, token_hash) values (1, $1) on conflict (id) do update set token_hash = excluded.token_hash",
+    [hash],
+  );
+}
+
+export async function heartbeat(
+  pool: Pool,
+  mode: "running" | "paused" | "stopped",
+  lastError: string | null,
+): Promise<IndexerControl> {
+  const res = await pool.query(
+    `update indexer_status
+     set heartbeat_at = now(), mode = $1, last_error = $2
+     where id = 1
+     returning desired`,
+    [mode, lastError],
+  );
+  const row = res.rows[0];
+  if (!row) {
+    throw new Error("indexer_status missing — apply sql/005_indexer_control.sql");
+  }
+  return {
+    desired: row.desired,
+  };
 }
