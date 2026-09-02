@@ -63,6 +63,7 @@ all 71 later transfers were secondary market / wallet moves (24 artifact-preserv
 | 1 | constructor write (ghost VersionUpdated 0→1) | 3,588,187 | `0x680a47c8…` |
 | 2 | upgrade (chain Upgraded + ghost VersionUpdated 1→2) | 14,069,160 | `0x3d637501…` |
 | 3 | upgrade at live genesis (chain Upgraded + ghost VersionUpdated 2→3 via migration 008) | 14,121,414 | `0x792eb8f9…` |
+| 4 | first upgrade onto VersionUpdated-capable class (chain Upgraded only; ghost 3→4) | 14,260,638 | `0x386947ce…` |
 
 Future upgrades emit live `VersionUpdated` from the contract.
 

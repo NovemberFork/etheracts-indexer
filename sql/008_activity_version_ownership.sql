@@ -117,6 +117,19 @@ from (
       'VersionUpdated',
       '{"old_version":2,"new_version":3}'::jsonb,
       'ghost'
+    ),
+    -- First upgrade *to* the VersionUpdated-emitting class still runs the old
+    -- upgrade_contract, so this bump never emitted VersionUpdated on-chain.
+    (
+      '0x03d7811b831bfb98d3c3ac9d7dcc28b43445c35afc82a931d5c06ebc2804f740',
+      14260638::bigint,
+      '0x7fbeb521c020b3ee59114ea00c64c5c5a67e82d44cb06b3a8e0be83ccab5ef',
+      1788370204::bigint,
+      '0x386947ce56ffdc3ac5365cf975b2f296e6050625886b78f2a2d49a491a80cf7',
+      9990,
+      'VersionUpdated',
+      '{"old_version":3,"new_version":4}'::jsonb,
+      'ghost'
     )
 ) as v(contract, block_number, block_hash, block_timestamp, tx_hash, event_index, name, payload, source)
 where not exists (
