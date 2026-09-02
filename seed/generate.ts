@@ -355,6 +355,11 @@ async function replay(
   ) => rows.push({ block, tx, name, payload, source });
 
   // constructor-state ghosts happened first inside the deploy tx
+  push(WINDOW_START, DEPLOY_TX, "OwnershipTransferred", {
+    previous_owner: "0x0",
+    new_owner: hex((await readAt("owner", WINDOW_START + 1))[0]),
+  }, "ghost");
+  push(WINDOW_START, DEPLOY_TX, "VersionUpdated", { old_version: 0, new_version: 1 }, "ghost");
   push(WINDOW_START, DEPLOY_TX, "MintTokenUpdated", { old_token: "0x0", new_token: hex((await readAt("mint_token", WINDOW_START + 1))[0]) }, "ghost");
   push(WINDOW_START, DEPLOY_TX, "MintPriceUpdated", { old_price: "0", new_price: await readU256At("mint_price", WINDOW_START + 1) }, "ghost");
   push(WINDOW_START, DEPLOY_TX, "MintingStatusUpdated", { enabled: BigInt((await readAt("is_minting", WINDOW_START + 1))[0]) !== 0n }, "ghost");
@@ -474,8 +479,17 @@ async function replay(
       push(e.block, e.tx, "TagReregistered", { index, old_tag: hex(oldTag), new_tag: hex(newTag) }, "chain");
     } else if (sel === SELECTORS.Upgraded) {
       push(e.block, e.tx, "Upgraded", { class_hash: hex(e.data[0]) }, "chain");
+      // Pre-VersionUpdated upgrades only emitted Upgraded — synthesize version bumps.
+      if (e.tx === "0x3d63750191f2497012eaa6be925e2c432ad6da51ad15bfe064472098c3bde24") {
+        push(e.block, e.tx, "VersionUpdated", { old_version: 1, new_version: 2 }, "ghost");
+      }
+    } else if (sel === SELECTORS.OwnershipTransferred) {
+      push(e.block, e.tx, "OwnershipTransferred", {
+        previous_owner: hex(e.keys[1]),
+        new_owner: hex(e.keys[2]),
+      }, "chain");
     }
-    // OwnershipTransferred (deploy init), Approval*: not indexed by the poller, skip
+    // Approval*: not indexed
   }
 
   rows.sort((a, b) => a.block - b.block);
