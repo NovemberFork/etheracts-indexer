@@ -1,4 +1,4 @@
--- Logical activity feed: one row per mint / wipe-transfer / save / engrave.
+-- Logical activity feed: one row per mint / wipe-transfer / save-transfer / engrave.
 -- Save transfers are ArtifactPreserved only (paired Transfer is omitted).
 -- Wipe transfers and mints come from Transfer rows without a matching preserve.
 create or replace view v_activity with (security_invoker = true) as
@@ -9,7 +9,7 @@ select
   e.tx_hash,
   e.event_index,
   e.source,
-  'save'::text as kind,
+  'save-transfer'::text as kind,
   e.payload ->> 'token_id' as token_id,
   e.payload ->> 'from' as from_addr,
   e.payload ->> 'to' as to_addr,
