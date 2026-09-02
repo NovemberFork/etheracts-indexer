@@ -16,9 +16,13 @@ export const makeDb = (url: string) =>
   new Pool({ connectionString: url, max: 1 });
 
 export async function migrate(pool: Pool): Promise<void> {
-  await pool.query(
-    "create table if not exists _migrations (name text primary key, applied_at timestamptz not null default now())",
-  );
+  await pool.query(`
+    create table if not exists _migrations (
+      name text primary key,
+      applied_at timestamptz not null default now()
+    );
+    alter table _migrations enable row level security;
+  `);
   const dir = path.resolve(import.meta.dirname, "../sql");
   const files = fs
     .readdirSync(dir)
