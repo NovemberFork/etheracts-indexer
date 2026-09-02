@@ -51,8 +51,21 @@ all 71 later transfers were secondary market / wallet moves (24 artifact-preserv
 - [x] 5 TagRegistered with indices 1–5 (chain)
 - [x] Admin timeline ghosts: 3× MintPriceUpdated, 2× MintTokenUpdated, 2× MintingStatusUpdated, ContractURIUpdated, BaseURIUpdated
 - [x] 1 Upgraded (Aug 29 v1.0.0, chain)
+- [x] VersionUpdated ghosts: deploy 0→1, v2 upgrade 1→2 (see migration 008 for v3 2→3 at live genesis)
+- [x] OwnershipTransferred ghost at deploy (0x0 → owner)
 - [x] constants: max_supply = 1111
 - [x] Applied to Supabase; views verified (v_collection: supply 111, 25 USDC, minting on)
+
+## Version timeline
+
+| Version | How | Block | Tx |
+|---|---|---|---|
+| 1 | constructor write (ghost VersionUpdated 0→1) | 3,588,187 | `0x680a47c8…` |
+| 2 | upgrade (chain Upgraded + ghost VersionUpdated 1→2) | 14,069,160 | `0x3d637501…` |
+| 3 | upgrade at live genesis (chain Upgraded + ghost VersionUpdated 2→3 via migration 008) | 14,121,414 | `0x792eb8f9…` |
+| 4 | first upgrade onto VersionUpdated-capable class (chain Upgraded only; ghost 3→4) | 14,260,638 | `0x386947ce…` |
+
+Future upgrades emit live `VersionUpdated` from the contract.
 
 ## Needs input
 

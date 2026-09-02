@@ -28,6 +28,9 @@ export const SELECTORS = {
   ContractURIUpdated: hash.getSelectorFromName("ContractURIUpdated"),
   BaseURIUpdated: hash.getSelectorFromName("BaseURIUpdated"),
   Upgraded: hash.getSelectorFromName("Upgraded"),
+  OwnershipTransferred: hash.getSelectorFromName("OwnershipTransferred"),
+  EtheractsPurchased: hash.getSelectorFromName("EtheractsPurchased"),
+  VersionUpdated: hash.getSelectorFromName("VersionUpdated"),
 } as const;
 
 export const SELECTOR_LIST = Object.values(SELECTORS);
@@ -145,6 +148,33 @@ export function decodeEvent(keys: string[], data: string[]): DecodedEvent {
       };
     case SELECTORS.Upgraded:
       return { name: "Upgraded", payload: { class_hash: hex(data[0]) } };
+    case SELECTORS.OwnershipTransferred:
+      return {
+        name: "OwnershipTransferred",
+        payload: {
+          previous_owner: hex(keys[1]),
+          new_owner: hex(keys[2]),
+        },
+      };
+    case SELECTORS.EtheractsPurchased:
+      return {
+        name: "EtheractsPurchased",
+        payload: {
+          token_id: u256(keys[1], keys[2]),
+          buyer: hex(keys[3]),
+          to: hex(data[0]),
+          payment_token: hex(data[1]),
+          price: u256(data[2], data[3]),
+        },
+      };
+    case SELECTORS.VersionUpdated:
+      return {
+        name: "VersionUpdated",
+        payload: {
+          old_version: Number(data[0]),
+          new_version: Number(data[1]),
+        },
+      };
     default:
       throw new Error(`Unknown event selector: ${keys[0]}`);
   }
