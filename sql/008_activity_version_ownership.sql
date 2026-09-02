@@ -29,7 +29,7 @@ select
   e.source,
   case
     when coalesce(e.payload ->> 'from', '0x0') in ('0x0', '0') then 'mint'
-    else 'transfer'
+    else 'wipe-transfer'
   end as kind,
   e.payload ->> 'token_id' as token_id,
   e.payload ->> 'from' as from_addr,
